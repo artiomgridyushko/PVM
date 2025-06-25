@@ -1,0 +1,61 @@
+-- Создание базы данных (если еще не создана)
+CREATE DATABASE IF NOT EXISTS pvm;
+USE pvm;
+
+-- Создание таблицы локальных сетей
+CREATE TABLE IF NOT EXISTS local_networks (
+    local_id INT AUTO_INCREMENT PRIMARY KEY,
+    network_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Создание таблицы компьютеров
+CREATE TABLE IF NOT EXISTS computers (
+    computer_id INT AUTO_INCREMENT PRIMARY KEY,
+    inventory_number VARCHAR(50) NOT NULL UNIQUE,
+    owner_name VARCHAR(100) NOT NULL,
+    specifications TEXT,
+    local_network_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (local_network_id) REFERENCES local_networks(local_id) ON DELETE SET NULL
+);
+
+-- Создание таблицы периферии
+CREATE TABLE IF NOT EXISTS peripherals (
+    peripheral_id INT AUTO_INCREMENT PRIMARY KEY,
+    computer_id INT NOT NULL,
+    type ENUM('Монитор', 'Принтер', 'Сканер', 'Клавиатура', 'Мышь', 'ИБП', 'Наушники', 'Другое') NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    serial_number VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (computer_id) REFERENCES computers(computer_id) ON DELETE CASCADE
+);
+
+
+-- 1. Модифицируем таблицу local_networks, чтобы network_name мог быть NULL
+ALTER TABLE local_networks MODIFY network_name VARCHAR(50) NULL;
+
+-- 2. Создаем 2 локальные сети (одна с именем, одна без)
+INSERT INTO local_networks (network_name, description) VALUES
+('Основная сеть офиса', 'Сеть для главного офиса на 3 этаже'),
+(NULL, 'Резервная сеть без названия');
+
+-- 3. Создаем 5 компьютеров
+INSERT INTO computers (inventory_number, owner_name, specifications, local_network_id) VALUES
+('PC-001', 'Иванов Иван Иванович', 'Intel Core i7, 16GB RAM, SSD 512GB', 1),
+('PC-002', 'Петров Петр Петрович', 'Intel Core i5, 8GB RAM, HDD 1TB', 1),
+('NB-001', 'Сидорова Анна Михайловна', 'Ноутбук Dell, Intel Core i5, 8GB RAM', NULL),
+('PC-003', 'Кузнецов Алексей Владимирович', 'Intel Core i9, 32GB RAM, SSD 1TB', 2),
+('PC-004', 'Смирнова Елена Сергеевна', 'AMD Ryzen 7, 16GB RAM, SSD 512GB', NULL);
+
+-- 4. Добавляем периферию для некоторых компьютеров
+INSERT INTO peripherals (computer_id, type, model, serial_number) VALUES
+(1, 'Монитор', 'Dell UltraSharp 27"', 'DEL123456'),
+(1, 'Клавиатура', 'Logitech K120', 'LOG789012'),
+(2, 'Монитор', 'LG 24MK600', 'LG345678'),
+(3, 'Мышь', 'Razer DeathAdder', 'RAZ901234'),
+(4, 'Принтер', 'HP LaserJet Pro', 'HP567890'),
+(5, 'Монитор', 'Samsung S24F350', 'SAM123789'),
+(5, 'Наушники', 'Sony WH-1000XM4', 'SON456123');

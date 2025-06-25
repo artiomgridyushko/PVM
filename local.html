@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АИС Управления фондом ПЭВМ - Локальные сети</title>
+    <link rel="stylesheet" href="css/computer.css">
+    <style>
+        /* Дополнительные стили для страницы периферии */
+        .network {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .network h2 {
+            margin-top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .computers-list {
+            margin: 15px 0;
+        }
+        .computer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .computer-item:last-child {
+            border-bottom: none;
+        }
+        .actions button {
+            margin-left: 5px;
+            padding: 3px 8px;
+            cursor: pointer;
+        }
+        .add-network-form {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+        .add-network-form input {
+            padding: 8px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        .add-network-form button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-network-form button:hover {
+            background-color: #45a049;
+        }
+        .select-computer {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .no-computers {
+            color: #777;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>АИС ПЭВМ</h1>
+                <p>Автоматизированная система</p>
+            </div>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="computer.html">Компьютеры</a></li>
+                    <li><a href="perefiria.html">Периферия</a></li>
+                    <li class="active"><a href="local.html">Локальные сети</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Основное содержимое -->
+        <main class="content">
+            <header class="content-header">
+                <h2>Управление локальными сетями</h2>
+                <button id="refresh-btn">Обновить данные</button>
+            </header>
+
+            <div id="networks-container">
+                <!-- Сети и компьютеры будут загружены динамически -->
+            </div>
+            
+            <div class="add-network-form">
+                <h3>Добавить новую сеть</h3>
+                <form id="add-network-form">
+                    <div class="form-group">
+                        <label for="network-name">Название сети:</label>
+                        <input type="text" id="network-name" placeholder="Название сети" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="network-description">Описание:</label>
+                        <input type="text" id="network-description" placeholder="Описание">
+                    </div>
+                    <button type="submit">Добавить сеть</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/local.js"></script>
+</body>
+</html>

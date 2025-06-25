@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АИС Управления фондом ПЭВМ - Компьютеры</title>
+    <link rel="stylesheet" href="css/computer.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>АИС ПЭВМ</h1>
+                <p>Автоматизированная система</p>
+            </div>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li class="active"><a href="computer.html">Компьютеры</a></li>
+                    <li><a href="perefiria.html">Периферия</a></li>
+                    <li><a href="local.html">Локальные сети</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Основное содержимое -->
+        <main class="content">
+            <header class="content-header">
+                <h2>Список компьютеров</h2>
+                <button id="refresh-btn">Обновить данные</button>
+            </header>
+
+            <div class="table-container">
+                <table id="computers-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Инв. номер</th>
+                            <th>Владелец</th>
+                            <th>Лок. сеть</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Данные будут загружаться через JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="add-form">
+                <h3>Добавить компьютер</h3>
+                <form id="add-computer-form">
+                    <div class="form-group">
+                        <label for="inventory-number">Инвентарный номер:</label>
+                        <input type="text" id="inventory-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="owner">ФИО владельца:</label>
+                        <input type="text" id="owner" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="network">Локальная сеть:</label>
+                        <select id="network">
+                            <option value="">Не выбрана</option>
+                        </select>
+                    </div>
+                    <button type="submit">Добавить</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/computer.js"></script>
+</body>
+</html>
