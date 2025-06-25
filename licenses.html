@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АИС Управления фондом ПЭВМ - Компьютеры</title>
-    <link rel="stylesheet" href="css/computer.css">
+    <title>АИС Управления фондом ПЭВМ - Лицензии</title>
+    <link rel="stylesheet" href="css/licenses.css">
 </head>
 <body>
     <div class="app-container">
@@ -18,10 +18,10 @@
             <nav class="main-nav">
                 <ul>
                     <li><a href="index.html">Главная</a></li>
-                    <li class="active"><a href="computer.html">Компьютеры</a></li>
+                    <li><a href="computer.html">Компьютеры</a></li>
                     <li><a href="perefiria.html">Периферия</a></li>
                     <li><a href="local.html">Локальные сети</a></li>
-                    <li><a href="licenses.html">Лицензии</a></li>
+                    <li class="active"><a href="licenses.html">Лицензии</a></li>
                 </ul>
             </nav>
         </aside>
@@ -29,18 +29,19 @@
         <!-- Основное содержимое -->
         <main class="content">
             <header class="content-header">
-                <h2>Список компьютеров</h2>
+                <h2>Список лицензий</h2>
                 <button id="refresh-btn">Обновить данные</button>
             </header>
 
             <div class="table-container">
-                <table id="computers-table">
+                <table id="licenses-table">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Инв. номер</th>
-                            <th>Владелец</th>
-                            <th>Лок. сеть</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th>Дата начала</th>
+                            <th>Дата окончания</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
@@ -51,21 +52,23 @@
             </div>
 
             <div class="add-form">
-                <h3>Добавить компьютер</h3>
-                <form id="add-computer-form">
+                <h3>Добавить лицензию</h3>
+                <form id="add-license-form">
                     <div class="form-group">
-                        <label for="inventory-number">Инвентарный номер:</label>
-                        <input type="text" id="inventory-number" required>
+                        <label for="license-name">Название:</label>
+                        <input type="text" id="license-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="owner">ФИО владельца:</label>
-                        <input type="text" id="owner" required>
+                        <label for="license-description">Описание:</label>
+                        <textarea id="license-description" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="network">Локальная сеть:</label>
-                        <select id="network">
-                            <option value="">Не выбрана</option>
-                        </select>
+                        <label for="start-date">Дата начала:</label>
+                        <input type="date" id="start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end-date">Дата окончания:</label>
+                        <input type="date" id="end-date" required>
                     </div>
                     <button type="submit">Добавить</button>
                 </form>
@@ -73,6 +76,6 @@
         </main>
     </div>
 
-    <script src="js/computer.js"></script>
+    <script src="js/licenses.js"></script>
 </body>
 </html>

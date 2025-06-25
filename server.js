@@ -368,6 +368,96 @@ app.get('/api/computers-with-peripherals', async (req, res) => {
     }
 });
 
+
+// Получить все лицензии
+app.get('/api/licenses', async (req, res) => {
+    try {
+        const [licenses] = await pool.promise().query('SELECT * FROM licenses ORDER BY license_id');
+        res.json(licenses);
+    } catch (err) {
+        console.error('Ошибка при получении лицензий:', err);
+        res.status(500).json({ error: 'Ошибка сервера', details: err.message });
+    }
+});
+
+// Добавить новую лицензию
+app.post('/api/licenses', async (req, res) => {
+    try {
+        const { name, description, start_date, end_date } = req.body;
+        
+        if (!name || !start_date || !end_date) {
+            return res.status(400).json({ error: 'Необходимо указать название, дату начала и дату окончания' });
+        }
+        
+        const [result] = await pool.promise().query(
+            'INSERT INTO licenses (name, description, start_date, end_date) VALUES (?, ?, ?, ?)',
+            [name, description, start_date, end_date]
+        );
+        
+        const [newLicense] = await pool.promise().query(
+            'SELECT * FROM licenses WHERE license_id = ?',
+            [result.insertId]
+        );
+        
+        res.status(201).json(newLicense[0]);
+    } catch (err) {
+        console.error('Ошибка при добавлении лицензии:', err);
+        res.status(500).json({ error: 'Ошибка сервера', details: err.message });
+    }
+});
+
+// Обновить лицензию
+app.put('/api/licenses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, start_date, end_date } = req.body;
+        
+        if (!name || !start_date || !end_date) {
+            return res.status(400).json({ error: 'Необходимо указать название, дату начала и дату окончания' });
+        }
+        
+        const [result] = await pool.promise().query(
+            'UPDATE licenses SET name = ?, description = ?, start_date = ?, end_date = ?, updated_at = NOW() WHERE license_id = ?',
+            [name, description, start_date, end_date, id]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Лицензия не найдена' });
+        }
+        
+        const [updatedLicense] = await pool.promise().query(
+            'SELECT * FROM licenses WHERE license_id = ?',
+            [id]
+        );
+        
+        res.json(updatedLicense[0]);
+    } catch (err) {
+        console.error('Ошибка при обновлении лицензии:', err);
+        res.status(500).json({ error: 'Ошибка сервера', details: err.message });
+    }
+});
+
+// Удалить лицензию
+app.delete('/api/licenses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [result] = await pool.promise().query(
+            'DELETE FROM licenses WHERE license_id = ?',
+            [id]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Лицензия не найдена' });
+        }
+        
+        res.status(204).end();
+    } catch (err) {
+        console.error('Ошибка при удалении лицензии:', err);
+        res.status(500).json({ error: 'Ошибка сервера', details: err.message });
+    }
+});
+
+
 // Обработка несуществующих маршрутов
 app.use((req, res) => {
     res.status(404).json({ error: 'Маршрут не найден' });

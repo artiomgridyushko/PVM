@@ -59,3 +59,43 @@ INSERT INTO peripherals (computer_id, type, model, serial_number) VALUES
 (4, 'Принтер', 'HP LaserJet Pro', 'HP567890'),
 (5, 'Монитор', 'Samsung S24F350', 'SAM123789'),
 (5, 'Наушники', 'Sony WH-1000XM4', 'SON456123');
+
+
+USE pvm;
+
+CREATE TABLE licenses (
+    license_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Лицензия на операционную систему
+INSERT INTO licenses (name, description, start_date, end_date)
+VALUES (
+    'Windows 10 Pro', 
+    'Корпоративная лицензия на операционную систему Windows 10 Pro для 50 рабочих станций',
+    '2023-01-01',
+    '2024-12-31'
+);
+
+-- Лицензия на офисный пакет
+INSERT INTO licenses (name, description, start_date, end_date)
+VALUES (
+    'Microsoft Office 365 Business', 
+    'Подписка на облачную версию Office 365 для 30 пользователей с доступом к Word, Excel, PowerPoint, Outlook',
+    '2023-03-15',
+    '2026-03-14'
+);
+
+-- Лицензия на антивирусное ПО
+INSERT INTO licenses (name, description, start_date, end_date)
+VALUES (
+    'Kaspersky Endpoint Security', 
+    'Корпоративная лицензия на антивирусную защиту для 100 устройств с централизованным управлением',
+    '2023-06-01',
+    '2026-05-31'
+);
