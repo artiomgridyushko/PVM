@@ -368,6 +368,21 @@ app.get('/api/computers-with-peripherals', async (req, res) => {
     }
 });
 
+app.get('/api/peripherals/count', async (req, res) => {
+    try {
+        const [result] = await pool.promise().query(
+            'SELECT COUNT(*) as count FROM peripherals'
+        );
+        
+        res.json({ count: result[0].count });
+    } catch (err) {
+        console.error('Ошибка при получении количества периферийных устройств:', err);
+        res.status(500).json({ 
+            error: 'Ошибка сервера',
+            details: err.message 
+        });
+    }
+});
 
 // Получить все лицензии
 app.get('/api/licenses', async (req, res) => {

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АИС Управления фондом ПЭВМ - Главная</title>
+    <link rel="stylesheet" href="css/computer.css"> <!-- Используем тот же CSS -->
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>АИС ПЭВМ</h1>
+                <p>Автоматизированная система</p>
+            </div>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li class="active"><a href="index.html">Главная</a></li>
+                    <li><a href="computer.html">Компьютеры</a></li>
+                    <li><a href="perefiria.html">Периферия</a></li>
+                    <li><a href="local.html">Локальные сети</a></li>
+                    <li><a href="licenses.html">Лицензии</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Основное содержимое -->
+        <main class="content">
+            <header class="content-header">
+                <h2>О системе</h2>
+            </header>
+
+            <div class="info-container">
+                <div class="info-card">
+                    <h3>АИС Управления фондом ПЭВМ</h3>
+                    <p>Автоматизированная информационная система для учета и управления парком персональных электронно-вычислительных машин (ПЭВМ) организации.</p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Основные функции</h3>
+                    <ul>
+                        <li>Учет компьютеров и их характеристик</li>
+                        <li>Управление периферийными устройствами</li>
+                        <li>Контроль локальных сетей</li>
+                        <li>Учет программных лицензий</li>
+                        <li>Отслеживание владельцев оборудования</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>Статистика</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="computers-count">0</span>
+                            <span class="stat-label">Компьютеров</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="peripherals-count">0</span>
+                            <span class="stat-label">Периферийных устройств</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="networks-count">0</span>
+                            <span class="stat-label">Локальных сетей</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="licenses-count">0</span>
+                            <span class="stat-label">Лицензий</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/index.js"></script>
+</body>
+</html>
