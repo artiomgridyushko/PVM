@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>АИС Управления фондом ПЭВМ - Локальные сети</title>
     <link rel="stylesheet" href="css/computer.css">
+     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <style>
         /* Дополнительные стили для страницы периферии */
         .network {
@@ -69,6 +70,51 @@
             color: #777;
             font-style: italic;
         }
+        .computer-count {
+            font-size: 0.9em;
+            color: #666;
+            background-color: #e0e0e0;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: normal;
+        }
+        /* Стили для статистики */
+        .network-stats {
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+        .network-stats h3 {
+            margin-top: 0;
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .stats-table th, .stats-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .stats-table th {
+            background-color: #f2f2f2;
+        }
+        .stats-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .stats-table tr.total-row {
+            background-color: #e6f7ff;
+            font-weight: bold;
+        }
+        .stats-table tr.unassigned-row {
+            background-color: #fff7e6;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -116,9 +162,379 @@
                     <button type="submit">Добавить сеть</button>
                 </form>
             </div>
+
+            <!-- Блок статистики -->
+            <div class="network-stats">
+                <h3>Статистика по сетям</h3>
+                <button id="show-stats-btn">Показать статистику</button>
+                <div id="stats-table-container" style="display: none;">
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>ID сети</th>
+                                <th>Название сети</th>
+                                <th>Количество компьютеров</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-table-body">
+                            <!-- Данные будут загружены динамически -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="network-stats">
+        <!-- Предыдущее содержимое блока статистики -->
+        <button id="export-excel-btn" class="excel-export">Экспорт в Excel</button>
+    </div>
         </main>
     </div>
 
-    <script src="js/local.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const API_BASE_URL = 'http://127.0.0.1:3000';
+            
+            loadNetworksAndComputers();
+            
+            document.getElementById('refresh-btn').addEventListener('click', loadNetworksAndComputers);
+            document.getElementById('add-network-form').addEventListener('submit', addNetwork);
+            document.getElementById('show-stats-btn').addEventListener('click', toggleStatsTable);
+
+            async function loadNetworksAndComputers() {
+                try {
+                    // Загружаем сети и компьютеры параллельно
+                    const [networksResponse, computersResponse] = await Promise.all([
+                        fetch(`${API_BASE_URL}/api/networks`),
+                        fetch(`${API_BASE_URL}/api/computers`)
+                    ]);
+                    
+                    if (!networksResponse.ok || !computersResponse.ok) {
+                        throw new Error('Ошибка загрузки данных');
+                    }
+                    
+                    const networks = await networksResponse.json();
+                    const allComputers = await computersResponse.json();
+                    
+                    const networksContainer = document.getElementById('networks-container');
+                    networksContainer.innerHTML = '';
+                    
+                    if (networks.length === 0) {
+                        networksContainer.innerHTML = '<p>Нет созданных сетей</p>';
+                        return;
+                    }
+                    
+                    networks.forEach(network => {
+                        const computersInNetwork = allComputers.filter(c => c.local_network_id == network.local_id);
+                        const availableComputers = allComputers.filter(c => !c.local_network_id);
+                        
+                        const networkBlock = document.createElement('div');
+                        networkBlock.className = 'network';
+                        networkBlock.dataset.networkId = network.local_id;
+                        
+                        networkBlock.innerHTML = `
+                            <h2>
+                                <span>${network.network_name || 'Сеть без названия'} (ID: ${network.local_id})</span>
+                                <span class="computer-count">Компьютеров: ${computersInNetwork.length}</span>
+                            </h2>
+                            <p>${network.description || 'Нет описания'}</p>
+                            
+                            <h3>Компьютеры в сети:</h3>
+                            <div class="computers-list" data-network-id="${network.local_id}">
+                                ${computersInNetwork.length > 0 ? 
+                                    computersInNetwork.map(c => `
+                                        <div class="computer-item" data-computer-id="${c.computer_id}">
+                                            <span>${c.inventory_number} (${c.owner_name})</span>
+                                            <div class="actions">
+                                                <button class="remove-computer-btn">Удалить из сети</button>
+                                            </div>
+                                        </div>
+                                    `).join('') : 
+                                    '<p class="no-computers">Нет компьютеров в этой сети</p>'}
+                            </div>
+                            
+                            <div class="add-computer-to-network">
+                                <select class="select-computer" data-network-id="${network.local_id}">
+                                    <option value="">Выберите компьютер</option>
+                                    ${availableComputers.map(c => `
+                                        <option value="${c.computer_id}">${c.inventory_number} (${c.owner_name})</option>
+                                    `).join('')}
+                                </select>
+                                <button class="add-computer-btn" data-network-id="${network.local_id}">Добавить в сеть</button>
+                            </div>
+                        `;
+                        
+                        networksContainer.appendChild(networkBlock);
+                    });
+                    
+                    // Добавляем обработчики событий для новых кнопок
+                    document.querySelectorAll('.add-computer-btn').forEach(btn => {
+                        btn.addEventListener('click', addComputerToNetwork);
+                    });
+                    
+                    document.querySelectorAll('.remove-computer-btn').forEach(btn => {
+                        btn.addEventListener('click', removeComputerFromNetwork);
+                    });
+                    
+                    // Обновляем статистику, если она видима
+                    if (document.getElementById('stats-table-container').style.display !== 'none') {
+                        await loadNetworkStats();
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки:', error);
+                    const networksContainer = document.getElementById('networks-container');
+                    networksContainer.innerHTML = `<p>Ошибка загрузки данных: ${error.message}</p>`;
+                }
+            }
+
+document.getElementById('export-excel-btn').addEventListener('click', exportToExcel);
+
+        async function exportToExcel() {
+            try {
+                // Получаем данные о сетях и компьютерах
+                const [networksResponse, computersResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/networks`),
+                    fetch(`${API_BASE_URL}/api/computers`)
+                ]);
+                
+                if (!networksResponse.ok || !computersResponse.ok) {
+                    throw new Error('Ошибка загрузки данных для экспорта');
+                }
+                
+                const networks = await networksResponse.json();
+                const allComputers = await computersResponse.json();
+                
+                // Создаем книгу Excel
+                const wb = XLSX.utils.book_new();
+                
+                // Подготовка данных для листа
+                const excelData = [];
+                
+                // Добавляем данные по каждой сети
+                networks.forEach(network => {
+                    const computersInNetwork = allComputers.filter(c => c.local_network_id == network.local_id);
+                    
+                    // Добавляем заголовок сети
+                    excelData.push([`Локальная сеть: ${network.network_name || 'Без названия'} (ID: ${network.local_id})`]);
+                    excelData.push(['Инвентарный номер', 'Владелец']);
+                    
+                    // Добавляем компьютеры сети
+                    computersInNetwork.forEach(computer => {
+                        excelData.push([computer.inventory_number, computer.owner_name]);
+                    });
+                    
+                    // Добавляем пустую строку между сетями
+                    excelData.push([]);
+                });
+                
+                // Добавляем итоговую статистику
+                const computersInNetworks = allComputers.filter(c => c.local_network_id).length;
+                const computersWithoutNetwork = allComputers.filter(c => !c.local_network_id).length;
+                
+                excelData.push(['ИТОГО:']);
+                excelData.push(['Компьютеров в сетях:', computersInNetworks]);
+                excelData.push(['Компьютеров без сети:', computersWithoutNetwork]);
+                
+                // Создаем лист с данными
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Добавляем лист в книгу
+                XLSX.utils.book_append_sheet(wb, ws, "Локальные сети");
+                
+                // Генерируем файл и скачиваем
+                XLSX.writeFile(wb, `Отчет_по_локальным_сетям_${new Date().toLocaleDateString()}.xlsx`);
+                
+            } catch (error) {
+                console.error('Ошибка при экспорте в Excel:', error);
+                alert(`Ошибка при экспорте: ${error.message}`);
+            }
+        }
+
+            async function addNetwork(e) {
+                e.preventDefault();
+                try {
+                    const data = {
+                        network_name: document.getElementById('network-name').value,
+                        description: document.getElementById('network-description').value || null
+                    };
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/networks`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Неизвестная ошибка');
+                    }
+                    
+                    document.getElementById('add-network-form').reset();
+                    await loadNetworksAndComputers();
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления сети:', error);
+                    alert(`Ошибка: ${error.message}`);
+                }
+            }
+
+            async function addComputerToNetwork() {
+                const networkId = this.dataset.networkId;
+                const select = document.querySelector(`.select-computer[data-network-id="${networkId}"]`);
+                const computerId = select.value;
+                
+                if (!computerId) {
+                    alert('Выберите компьютер для добавления');
+                    return;
+                }
+                
+                try {
+                    // 1. Получаем текущие данные компьютера
+                    const computerResponse = await fetch(`${API_BASE_URL}/api/computers/${computerId}`);
+                    if (!computerResponse.ok) {
+                        throw new Error('Компьютер не найден');
+                    }
+                    
+                    const computer = await computerResponse.json();
+                    
+                    // 2. Обновляем только local_network_id
+                    const updateData = {
+                        inventory_number: computer.inventory_number,
+                        owner_name: computer.owner_name,
+                        specifications: computer.specifications || null,
+                        local_network_id: networkId
+                    };
+
+                    // 3. Отправляем запрос на обновление
+                    const updateResponse = await fetch(`${API_BASE_URL}/api/computers/${computerId}`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!updateResponse.ok) {
+                        const errorData = await updateResponse.json().catch(() => ({}));
+                        throw new Error(errorData.error || 'Ошибка сервера при обновлении');
+                    }
+
+                    // 4. Обновляем интерфейс
+                    await loadNetworksAndComputers();
+                    select.value = ''; // Сбрасываем выбор
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления компьютера:', error);
+                    alert(`Ошибка: ${error.message}`);
+                }
+            }
+
+            async function removeComputerFromNetwork() {
+                if (!confirm('Удалить компьютер из сети?')) return;
+                
+                const computerItem = this.closest('.computer-item');
+                const computerId = computerItem.dataset.computerId;
+                const computerInfo = computerItem.querySelector('span').textContent;
+                const [inventoryNumber, ownerName] = computerInfo.split(' (');
+                
+                try {
+                    // Формируем данные для обновления
+                    const updateData = {
+                        inventory_number: inventoryNumber.trim(),
+                        owner_name: ownerName.replace(')', '').trim(),
+                        local_network_id: null
+                    };
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/computers/${computerId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка удаления компьютера из сети');
+                    }
+                    
+                    await loadNetworksAndComputers();
+                    
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось удалить компьютер из сети');
+                }
+            }
+
+            async function toggleStatsTable() {
+                const container = document.getElementById('stats-table-container');
+                const button = document.getElementById('show-stats-btn');
+                
+                if (container.style.display === 'none') {
+                    await loadNetworkStats();
+                    container.style.display = 'block';
+                    button.textContent = 'Скрыть статистику';
+                } else {
+                    container.style.display = 'none';
+                    button.textContent = 'Показать статистику';
+                }
+            }
+
+            async function loadNetworkStats() {
+                try {
+                    const [networksResponse, computersResponse] = await Promise.all([
+                        fetch(`${API_BASE_URL}/api/networks`),
+                        fetch(`${API_BASE_URL}/api/computers`)
+                    ]);
+                    
+                    if (!networksResponse.ok || !computersResponse.ok) {
+                        throw new Error('Ошибка загрузки данных для статистики');
+                    }
+                    
+                    const networks = await networksResponse.json();
+                    const computers = await computersResponse.json();
+                    
+                    const statsTableBody = document.getElementById('stats-table-body');
+                    statsTableBody.innerHTML = '';
+                    
+                    networks.forEach(network => {
+                        const computerCount = computers.filter(c => c.local_network_id == network.local_id).length;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${network.local_id}</td>
+                            <td>${network.network_name || 'Без названия'}</td>
+                            <td>${computerCount}</td>
+                        `;
+                        
+                        statsTableBody.appendChild(row);
+                    });
+                    
+                    // Добавляем итоговую строку
+                    const totalRow = document.createElement('tr');
+                    totalRow.className = 'total-row';
+                    totalRow.innerHTML = `
+                        <td colspan="2"><strong>Всего компьютеров в сетях:</strong></td>
+                        <td><strong>${computers.filter(c => c.local_network_id).length}</strong></td>
+                    `;
+                    statsTableBody.appendChild(totalRow);
+                    
+                    // Добавляем строку с компьютерами без сети
+                    const unassignedRow = document.createElement('tr');
+                    unassignedRow.className = 'unassigned-row';
+                    unassignedRow.innerHTML = `
+                        <td colspan="2"><em>Компьютеры без сети:</em></td>
+                        <td><em>${computers.filter(c => !c.local_network_id).length}</em></td>
+                    `;
+                    statsTableBody.appendChild(unassignedRow);
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки статистики:', error);
+                    document.getElementById('stats-table-body').innerHTML = `
+                        <tr>
+                            <td colspan="3">Ошибка загрузки данных: ${error.message}</td>
+                        </tr>
+                    `;
+                }
+            }
+        });
+    </script>
 </body>
 </html>

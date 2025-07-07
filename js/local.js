@@ -7,84 +7,86 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-network-form').addEventListener('submit', addNetwork);
 
     async function loadNetworksAndComputers() {
-        try {
-            // Загружаем сети и компьютеры параллельно
-            const [networksResponse, computersResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/networks`),
-                fetch(`${API_BASE_URL}/api/computers`)
-            ]);
-            
-            if (!networksResponse.ok || !computersResponse.ok) {
-                throw new Error('Ошибка загрузки данных');
-            }
-            
-            const networks = await networksResponse.json();
-            const allComputers = await computersResponse.json();
-            
-            const networksContainer = document.getElementById('networks-container');
-            networksContainer.innerHTML = '';
-            
-            if (networks.length === 0) {
-                networksContainer.innerHTML = '<p>Нет созданных сетей</p>';
-                return;
-            }
-            
-            networks.forEach(network => {
-                const networkBlock = document.createElement('div');
-                networkBlock.className = 'network';
-                networkBlock.dataset.networkId = network.local_id;
-                
-                const computersInNetwork = allComputers.filter(c => c.local_network_id == network.local_id);
-                const availableComputers = allComputers.filter(c => !c.local_network_id);
-                
-                networkBlock.innerHTML = `
-                    <h2>
-                        <span>${network.network_name || 'Сеть без названия'} (ID: ${network.local_id})</span>
-                    </h2>
-                    <p>${network.description || 'Нет описания'}</p>
-                    
-                    <h3>Компьютеры в сети:</h3>
-                    <div class="computers-list" data-network-id="${network.local_id}">
-                        ${computersInNetwork.length > 0 ? 
-                            computersInNetwork.map(c => `
-                                <div class="computer-item" data-computer-id="${c.computer_id}">
-                                    <span>${c.inventory_number} (${c.owner_name})</span>
-                                    <div class="actions">
-                                        <button class="remove-computer-btn">Удалить из сети</button>
-                                    </div>
-                                </div>
-                            `).join('') : 
-                            '<p class="no-computers">Нет компьютеров в этой сети</p>'}
-                    </div>
-                    
-                    <div class="add-computer-to-network">
-                        <select class="select-computer" data-network-id="${network.local_id}">
-                            <option value="">Выберите компьютер</option>
-                            ${availableComputers.map(c => `
-                                <option value="${c.computer_id}">${c.inventory_number} (${c.owner_name})</option>
-                            `).join('')}
-                        </select>
-                        <button class="add-computer-btn" data-network-id="${network.local_id}">Добавить в сеть</button>
-                    </div>
-                `;
-                
-                networksContainer.appendChild(networkBlock);
-            });
-            
-            document.querySelectorAll('.add-computer-btn').forEach(btn => {
-                btn.addEventListener('click', addComputerToNetwork);
-            });
-            
-            document.querySelectorAll('.remove-computer-btn').forEach(btn => {
-                btn.addEventListener('click', removeComputerFromNetwork);
-            });
-            
-        } catch (error) {
-            console.error('Ошибка загрузки:', error);
-            const networksContainer = document.getElementById('networks-container');
-            networksContainer.innerHTML = `<p>Ошибка загрузки данных: ${error.message}</p>`;
+    try {
+        // Загружаем сети и компьютеры параллельно
+        const [networksResponse, computersResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/networks`),
+            fetch(`${API_BASE_URL}/api/computers`)
+        ]);
+        
+        if (!networksResponse.ok || !computersResponse.ok) {
+            throw new Error('Ошибка загрузки данных');
         }
+        
+        const networks = await networksResponse.json();
+        const allComputers = await computersResponse.json();
+        
+        const networksContainer = document.getElementById('networks-container');
+        networksContainer.innerHTML = '';
+        
+        if (networks.length === 0) {
+            networksContainer.innerHTML = '<p>Нет созданных сетей</p>';
+            return;
+        }
+        
+        networks.forEach(network => {
+            const computersInNetwork = allComputers.filter(c => c.local_network_id == network.local_id);
+            const availableComputers = allComputers.filter(c => !c.local_network_id);
+            
+            const networkBlock = document.createElement('div');
+            networkBlock.className = 'network';
+            networkBlock.dataset.networkId = network.local_id;
+            
+            networkBlock.innerHTML = `
+                <h2>
+                    <span>${network.network_name || 'Сеть без названия'} (ID: ${network.local_id})</span>
+                    <span class="computer-count">Компьютеров: ${computersInNetwork.length}</span>
+                </h2>
+                <p>${network.description || 'Нет описания'}</p>
+                
+                <h3>Компьютеры в сети:</h3>
+                <div class="computers-list" data-network-id="${network.local_id}">
+                    ${computersInNetwork.length > 0 ? 
+                        computersInNetwork.map(c => `
+                            <div class="computer-item" data-computer-id="${c.computer_id}">
+                                <span>${c.inventory_number} (${c.owner_name})</span>
+                                <div class="actions">
+                                    <button class="remove-computer-btn">Удалить из сети</button>
+                                </div>
+                            </div>
+                        `).join('') : 
+                        '<p class="no-computers">Нет компьютеров в этой сети</p>'}
+                </div>
+                
+                <div class="add-computer-to-network">
+                    <select class="select-computer" data-network-id="${network.local_id}">
+                        <option value="">Выберите компьютер</option>
+                        ${availableComputers.map(c => `
+                            <option value="${c.computer_id}">${c.inventory_number} (${c.owner_name})</option>
+                        `).join('')}
+                    </select>
+                    <button class="add-computer-btn" data-network-id="${network.local_id}">Добавить в сеть</button>
+                </div>
+            `;
+            
+            networksContainer.appendChild(networkBlock);
+        });
+        
+        // Остальной код остается без изменений
+        document.querySelectorAll('.add-computer-btn').forEach(btn => {
+            btn.addEventListener('click', addComputerToNetwork);
+        });
+        
+        document.querySelectorAll('.remove-computer-btn').forEach(btn => {
+            btn.addEventListener('click', removeComputerFromNetwork);
+        });
+        
+    } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        const networksContainer = document.getElementById('networks-container');
+        networksContainer.innerHTML = `<p>Ошибка загрузки данных: ${error.message}</p>`;
     }
+}
 
     async function addNetwork(e) {
         e.preventDefault();
